@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Hls from "hls.js";
-import { Search, Play, X, Tv, Radio, ChevronRight, Volume2, Maximize, LoaderCircle, AlertCircle } from "lucide-react";
+import { Search, Play, X, Tv, Radio, ChevronRight, LoaderCircle, AlertCircle } from "lucide-react";
 
 type Channel = { id: string; name: string; url: string; logo?: string; group?: string; language?: string; country?: string };
 type Group = { id: string; title: string; subtitle: string; channels: Channel[] };
@@ -96,6 +96,7 @@ export default function Home() {
     channels: group.channels.filter(channel => channel.name.toLowerCase().includes(query.toLowerCase()))
   })).filter(group => group.channels.length > 0), [groups, query]);
 
+  const visibleGroups = activeTab === "Tamil" ? filteredGroups.filter(group => group.id === "tamil") : activeTab === "Movies" ? filteredGroups.filter(group => group.id === "movies") : activeTab === "Discover" ? filteredGroups.filter(group => group.id !== "tamil") : filteredGroups;
   const allChannels = groups.flatMap(group => group.channels);
   const hero = allChannels.find(channel => /sun tv|vijay tv|star movies|zee tamil/i.test(channel.name)) || allChannels[0];
 
@@ -103,7 +104,7 @@ export default function Home() {
     <main>
       <nav className="navbar">
         <a className="brand" href="#"><span className="brand-mark"><Tv size={22} /></span>tv<span>watch</span></a>
-        <div className="nav-links">{["Home", "Tamil", "Movies", "Discover"].map(tab => <button key={tab} className={activeTab === tab ? "active" : ""} onClick={() => { setActiveTab(tab); setQuery(tab === "Tamil" ? "" : tab === "Movies" ? "movie" : ""); }}>{tab}</button>)}</div>
+        <div className="nav-links">{["Home", "Tamil", "Movies", "Discover"].map(tab => <button key={tab} className={activeTab === tab ? "active" : ""} onClick={() => { setActiveTab(tab); setQuery(""); }}>{tab}</button>)}</div>
         <label className="search-box"><Search size={18} /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search channels…" /><kbd>⌕</kbd></label>
       </nav>
 
@@ -114,7 +115,7 @@ export default function Home() {
           <h1>Television.<br /><em>Reimagined.</em></h1>
           <p>All your favourite channels, together in one place. Settle in and watch live.</p>
           <div className="hero-actions">{hero ? <button className="primary-button" onClick={() => setSelected(hero)}><Play size={18} fill="currentColor" /> Watch live</button> : <button className="primary-button" onClick={() => document.getElementById("channels")?.scrollIntoView({ behavior: "smooth" })}><Tv size={18} /> Explore channels</button>}<button className="secondary-button" onClick={() => document.getElementById("channels")?.scrollIntoView({ behavior: "smooth" })}>Browse channels <ChevronRight size={17} /></button></div>
-          <div className="hero-foot"><span><Radio size={15} /> LIVE CHANNELS</span><span>•</span><span>NO SUBSCRIPTION REQUIRED BY THIS APP</span></div>
+          <div className="hero-foot"><span><Radio size={15} /> LIVE CHANNELS</span><span>•</span><span>PUBLIC PLAYLIST DIRECTORY</span></div>
         </div>
         <div className="hero-visual"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="hero-tv"><Tv size={76} strokeWidth={1} /><span>LIVE</span></div><div className="floating-chip chip-one">TAMIL ENTERTAINMENT</div><div className="floating-chip chip-two">MOVIES & MORE</div></div>
       </section>
@@ -124,13 +125,13 @@ export default function Home() {
         {loading && <div className="loading-line"><LoaderCircle className="spin" /> Loading live channels…</div>}
         {error && <div className="error-banner"><AlertCircle size={18} /> {error} <button onClick={() => location.reload()}>Retry</button></div>}
         {!loading && !error && allChannels.length === 0 && <div className="empty-state"><Tv size={32} /><h3>Getting your channels ready</h3><p>The playlist service returned no channels. Try again in a moment.</p><button className="secondary-button" onClick={() => location.reload()}>Refresh</button></div>}
-        {filteredGroups.map((group, index) => (
+        {visibleGroups.map((group, index) => (
           <section className="channel-section" key={group.id}>
             <div className="row-heading"><div><span className="row-number">0{index + 1}</span><div><h3>{group.title}</h3><p>{group.subtitle}</p></div></div><span>{group.channels.length} CHANNELS</span></div>
             <div className="channel-row">{group.channels.slice(0, 36).map(channel => <ChannelCard key={channel.id + channel.url} channel={channel} onPlay={setSelected} />)}</div>
           </section>
         ))}
-        {!loading && filteredGroups.length === 0 && <div className="empty-state"><Search size={30} /><h3>No channels found</h3><p>Try another channel name.</p><button className="secondary-button" onClick={() => setQuery("")}>Clear search</button></div>}
+        {!loading && visibleGroups.length === 0 && <div className="empty-state"><Search size={30} /><h3>No channels found</h3><p>Try another channel name.</p><button className="secondary-button" onClick={() => setQuery("")}>Clear search</button></div>}
       </section>
 
       <footer><a className="brand" href="#"><span className="brand-mark"><Tv size={18} /></span>tv<span>watch</span></a><p>Made for your personal viewing experience.</p><span>Channel listings powered by iptv-org · Streams belong to their respective providers.</span></footer>
